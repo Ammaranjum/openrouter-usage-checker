@@ -44,7 +44,7 @@ Menu items:
 ## Terminal, no GUI required
 
 ```bash
-cd ~/.local/share/gnome-shell/extensions/openrouter-usage-monitor@local
+cd ~/.local/share/gnome-shell/extensions/openrouter-usage-checker@Ammaranjum
 ./set-key.sh                 # auto-detect from app configs, store in keyring
 ./set-key.sh store sk-or-…   # explicit key
 ./set-key.sh file            # store in the config file instead of the keyring

@@ -10,7 +10,7 @@
 #   ./set-key.sh reload        re-enable the extension so new code is loaded
 set -euo pipefail
 
-UUID='openrouter-usage-monitor@local'
+UUID='openrouter-usage-checker@Ammaranjum'
 SERVICE='openrouter-usage-monitor'
 ACCOUNT='default'
 KEY_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/openrouter-usage-monitor/api_key"

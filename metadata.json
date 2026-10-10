@@ -1,5 +1,5 @@
 {
-  "uuid": "openrouter-usage-monitor@local",
+  "uuid": "openrouter-usage-checker@Ammaranjum",
   "name": "OpenRouter Usage Checker",
   "description": "A GNOME shell panel indicator that stays top-right and shows how much OpenRouter credit remains on your API key. Stores the API key in the desktop Secret Service, with a config-file fallback.",
   "shell-version": [
