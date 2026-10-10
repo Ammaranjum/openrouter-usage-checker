@@ -1,7 +1,7 @@
-# OpenRouter Usage Monitor (GNOME Shell extension)
+# OpenRouter Usage Checker (GNOME Shell extension)
 
-Top-panel indicator showing the remaining credits / spend of one OpenRouter API
-key. Written for GNOME 45–48; fixed and verified on GNOME Shell 46.0 (Ubuntu 24.04).
+Top-right panel indicator showing the remaining credits / spend of one OpenRouter
+API key. Written for GNOME 45–48; fixed and verified on GNOME Shell 46.0 (Ubuntu 24.04).
 
 ## Files
 

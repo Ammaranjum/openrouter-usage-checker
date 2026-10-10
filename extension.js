@@ -1,4 +1,5 @@
-// OpenRouter Usage Monitor — a GNOME Shell panel indicator for one API key.
+// OpenRouter Usage Checker — a GNOME Shell panel indicator that stays top-right
+// and shows how much credit remains on one API key.
 //
 // Fixes for GNOME 45/46:
 //   * `clutter_text.set_password()` does not exist -> use `set_password_char()`

@@ -1,7 +1,7 @@
 {
   "uuid": "openrouter-usage-monitor@local",
-  "name": "OpenRouter Usage Monitor",
-  "description": "A GNOME top-panel indicator for OpenRouter API key usage. Stores the API key in the desktop Secret Service, with a config-file fallback.",
+  "name": "OpenRouter Usage Checker",
+  "description": "A GNOME shell panel indicator that stays top-right and shows how much OpenRouter credit remains on your API key. Stores the API key in the desktop Secret Service, with a config-file fallback.",
   "shell-version": [
     "45",
     "46",
