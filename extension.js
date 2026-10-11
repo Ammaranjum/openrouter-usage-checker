@@ -311,7 +311,7 @@ export default class OpenRouterUsageExtension extends Extension {
     _openPopupEntry() {
         this._closeEntry();
 
-        const popup = new PopupMenu.PopupMenu(this._button, 0.5, St.Side.TOP);
+        const popup = new PopupMenu.PopupMenu(this._button.menu.actor, 0.5, St.Side.TOP);
         const holder = new PopupMenu.PopupBaseMenuItem({ reactive: false, can_focus: false });
         const box = new St.BoxLayout({ vertical: true, style: 'spacing: 8px; padding: 6px;' });
 
@@ -325,7 +325,7 @@ export default class OpenRouterUsageExtension extends Extension {
             style: 'min-width: 340px; padding: 8px;',
         });
         try {
-            entry.clutter_text.set_password_char?.('•'.charCodeAt(0));
+            entry.clutter_text.set_visibility(false);
         } catch (e) {
             this._log(`Could not mask the entry: ${e.message}`);
         }
