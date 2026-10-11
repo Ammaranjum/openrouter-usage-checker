@@ -10,16 +10,8 @@ import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import Soup from 'gi://Soup?version=3.0';
 
-const SECRET_SERVICE = 'openrouter-usage-monitor';
-const SECRET_ACCOUNT = 'default';
 const API_URL = 'https://openrouter.ai/api/v1/key';
-const KEY_FILE = GLib.build_filenamev([GLib.get_user_config_dir(), 'openrouter-usage-monitor', 'api_key']);
 const KEY_PATTERN = /sk-or-[A-Za-z0-9_.-]{16,}/;
-const IMPORT_SOURCES = [
-    { name: 'Cline', path: GLib.build_filenamev([GLib.get_home_dir(), '.cline', 'data', 'secrets.json']) },
-    { name: 'opencode', path: GLib.build_filenamev([GLib.get_home_dir(), '.local', 'share', 'opencode', 'auth.json']) },
-    { name: 'key file', path: KEY_FILE },
-];
 
 let failures = 0;
 function check(label, ok, detail) {
@@ -157,13 +149,12 @@ function main() {
     const extSrc = readTextFile(`${extDir}/extension.js`);
     check('extension.js readable', !!extSrc, `${extDir}/extension.js`);
     if (extSrc) {
-        const start = extSrc.indexOf('const SECRET_SERVICE');
+        const start = extSrc.indexOf('const API_URL');
         const end = extSrc.indexOf('export default class');
         const region = extSrc.slice(start, end);
         try {
-            const built = new Function('GLib', 'Gio', 'Soup', `${region}\nreturn { KEY_FILE, IMPORT_SOURCES, KEY_PATTERN, REFRESH_SECONDS, API_URL };`)(GLib, Gio, Soup);
-            check('module constants evaluate', !!built.KEY_FILE && built.IMPORT_SOURCES.length === 3 && built.KEY_PATTERN instanceof RegExp,
-                built.KEY_FILE);
+            const built = new Function('GLib', 'Gio', 'Soup', `${region}\nreturn { KEY_PATTERN, REFRESH_SECONDS, API_URL, KEYS_URL };`)(GLib, Gio, Soup);
+            check('module constants evaluate', built.KEY_PATTERN instanceof RegExp && typeof built.API_URL === 'string', built.API_URL);
         } catch (e) {
             check('module constants evaluate', false, e.message);
         }
@@ -197,32 +188,18 @@ function main() {
     check('all GI names exist', missing.length === 0, missing.join(', ') || `${names.length} ok`);
 
     print(`home: ${GLib.get_home_dir()}`);
-    print(`config key file: ${KEY_FILE}\n`);
+    print('');
 
     // 1. keyring lookup, exactly like _getKey()
-    const [ringKey, ringErr] = secretToolSync(['lookup', 'service', SECRET_SERVICE, 'account', SECRET_ACCOUNT], null);
+    const [ringKey, ringErr] = secretToolSync(['lookup','service','openrouter-usage-monitor','account','default'], null);
     check('secret-tool lookup runs', ringErr === null, ringErr ?? 'ok');
     print(`      keyring: ${ringKey ? maskKey(ringKey) : 'empty'}`);
 
     // 2. fallback chain: keyring > file > env > app configs
-    const fileText = readTextFile(KEY_FILE);
-    const fileKey = fileText ? ((fileText.match(KEY_PATTERN)?.[0] ?? fileText).trim() || null) : null;
     const envKey = (GLib.getenv('OPENROUTER_API_KEY') ?? '').trim() || null;
-    const key = ringKey || fileKey || envKey || firstKeyFromConfigs();
+    const key = envKey || ringKey;
     check('a usable key is resolvable', !!key, key ? maskKey(key) : 'none found anywhere');
 
-    // 3. import scan reports masked keys only
-    const seen = new Set();
-    const found = [];
-    for (const s of IMPORT_SOURCES) {
-        const t = readTextFile(s.path);
-        const m = t && t.match(KEY_PATTERN);
-        if (m && !seen.has(m[0])) {
-            seen.add(m[0]);
-            found.push(`${s.name}: ${maskKey(m[0])}`);
-        }
-    }
-    check('import scan finds app configs', found.length > 0, found.join(' | '));
 
     // 4. live request + parsing
     if (key) {
