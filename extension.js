@@ -6,6 +6,7 @@
 import St from 'gi://St';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
+import Clutter from 'gi://Clutter';
 import Soup from 'gi://Soup?version=3.0';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
@@ -31,30 +32,14 @@ export default class OpenRouterUsageExtension extends Extension {
 
         this._button = new PanelMenu.Button(0.0, this.metadata?.name ?? 'OpenRouter Usage');
 
-        // BoxLayout — x_align/y_align use Clutter.ActorAlign: FILL=0 START=1 END=2 CENTER=3 BASELINE=4
-        const box = new St.BoxLayout({
-            vertical: false,
-            x_align: 3, // CENTER
-            y_align: 3, // CENTER
-            style: 'spacing: 5px;',
-        });
-
-        // Subtle hexagon icon — techy, small, sits next to the amount
-        this._icon = new St.Label({
-            text: '⬡',
-            x_align: 3,
-            y_align: 3,
-            style: 'font-size: 9px; color: #666;',
-        });
-
+        // panel-status-menu-box is the CSS class GNOME uses for its own
+        // text+icon panel buttons — it handles vertical centering via the theme
+        const box = new St.BoxLayout({ style_class: 'panel-status-menu-box' });
         this._label = new St.Label({
-            text: 'OR',
-            x_align: 3,
-            y_align: 3,
-            style: 'font-size: 11px;',
+            text: '⬡ OR',
+            y_expand: true,
+            y_align: Clutter.ActorAlign.CENTER,
         });
-
-        box.add_child(this._icon);
         box.add_child(this._label);
         this._button.add_child(box);
 
@@ -92,7 +77,6 @@ export default class OpenRouterUsageExtension extends Extension {
         this._button?.destroy();
         this._button = null;
         this._label = null;
-        this._icon = null;
         this._statusItem = null;
         this._valueItems = [];
         this._session = null;
@@ -174,15 +158,11 @@ export default class OpenRouterUsageExtension extends Extension {
         this._statusItem.label.text = message;
         this._label.text = panelText;
 
-        // Color-coded panel label: red = critical, amber = warn, default = ok
+        // Color-coded: red = critical, amber = warn, default = panel fg
         const colors = { crit: '#ff6b6b', warn: '#ffbf47' };
         this._label.style = colors[level]
             ? `color: ${colors[level]}; font-weight: bold;`
-            : '';
-        // Keep icon dim unless critical/warn
-        if (this._icon) {
-            this._icon.style = `font-size: 9px; color: ${colors[level] ?? '#666'};`;
-        }
+            : null;
     }
 
     _setRows(lines) {
@@ -201,7 +181,7 @@ export default class OpenRouterUsageExtension extends Extension {
         const key = this._loadKey();
         if (!key) {
             this._setRows([]);
-            this._setStatus('No API key set — open Preferences to add one.', 'OR', 'warn');
+            this._setStatus('No API key set — open Preferences to add one.', '⬡ OR', 'warn');
             return;
         }
         this._maskedKey = this._maskKey(key);
@@ -220,7 +200,7 @@ export default class OpenRouterUsageExtension extends Extension {
                 const bytes = session.send_and_read_finish(result);
                 body = new TextDecoder().decode(bytes.get_data());
             } catch (e) {
-                this._setStatus(`Request failed: ${e.message}`, 'OR !', 'crit');
+                this._setStatus(`Request failed: ${e.message}`, '⬡ OR !', 'crit');
                 return;
             }
 
@@ -233,7 +213,7 @@ export default class OpenRouterUsageExtension extends Extension {
                     : `API request failed (${status})`;
                 this._setStatus(
                     `${label}${detail ? `: ${detail}` : ''}.`,
-                    status === 401 ? 'OR !' : 'OR ?',
+                    status === 401 ? '⬡ OR !' : '⬡ OR ?',
                     status === 401 ? 'crit' : 'warn'
                 );
                 return;
@@ -242,7 +222,7 @@ export default class OpenRouterUsageExtension extends Extension {
             let payload;
             try { payload = JSON.parse(body); }
             catch (e) {
-                this._setStatus(`Could not parse response: ${e.message}`, 'OR !', 'crit');
+                this._setStatus(`Could not parse response: ${e.message}`, '⬡ OR !', 'crit');
                 return;
             }
             this._render(payload?.data);
@@ -251,7 +231,7 @@ export default class OpenRouterUsageExtension extends Extension {
 
     _render(data) {
         if (!data) {
-            this._setStatus('Unexpected response: no "data" object.', 'OR ?', 'warn');
+            this._setStatus('Unexpected response: no "data" object.', '⬡ OR ?', 'warn');
             return;
         }
 
@@ -280,13 +260,13 @@ export default class OpenRouterUsageExtension extends Extension {
         // Panel text + color
         let panel, level;
         if (remaining !== null) {
-            panel = `OR ${money(remaining)}`;
+            panel = `⬡ OR $${money(remaining)}`;
             level = pct === null ? 'ok' : pct <= 10 ? 'crit' : pct <= 30 ? 'warn' : 'ok';
         } else if (used !== null) {
-            panel = `OR ${money(used)}`;
+            panel = `⬡ OR $${money(used)}`;
             level = 'ok';
         } else {
-            panel = 'OR ?';
+            panel = '⬡ OR ?';
             level = 'warn';
         }
 
