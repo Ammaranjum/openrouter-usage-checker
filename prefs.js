@@ -1,5 +1,5 @@
 // prefs.js — Preferences UI for OpenRouter Usage Checker
-// Opened via "Preferences…" in the panel menu or GNOME Extensions app.
+// by Ammar Anjum
 
 import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
@@ -49,89 +49,73 @@ function savePrefs(obj) {
 
 export default class OpenRouterPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
-        window.set_default_size(480, 320);
+        window.set_default_size(520, 380);
+        window.title = 'OpenRouter Usage Checker';
 
-        const page = new Adw.PreferencesPage();
+        const page = new Adw.PreferencesPage({
+            title: 'Settings',
+            icon_name: 'preferences-system-symbolic',
+        });
         window.add(page);
 
-        // ── API Key group ──────────────────────────────────────────────────
+        // ── Header banner ──────────────────────────────────────────────────
+        const aboutGroup = new Adw.PreferencesGroup();
+        page.add(aboutGroup);
+
+        const banner = new Adw.ActionRow({
+            title: 'OpenRouter Usage Checker',
+            subtitle: 'by Ammar Anjum',
+            icon_name: 'network-transmit-receive-symbolic',
+        });
+        aboutGroup.add(banner);
+
+        // ── API Key ────────────────────────────────────────────────────────
         const keyGroup = new Adw.PreferencesGroup({
             title: 'API Key',
-            description: 'Your OpenRouter key (sk-or-…). Stored in ~/.config/openrouter-extension/key',
+            description: 'Get your key at openrouter.ai/settings/keys',
         });
         page.add(keyGroup);
 
-        const keyRow = new Adw.ActionRow({ title: 'API Key' });
-        keyGroup.add(keyRow);
-
-        const keyEntry = new Gtk.Entry({
+        const entryRow = new Adw.PasswordEntryRow({
+            title: 'OpenRouter API Key',
             text: loadKey(),
-            placeholder_text: 'sk-or-v1-…',
-            visibility: false,    // masked by default
-            input_purpose: Gtk.InputPurpose.PASSWORD,
-            hexpand: true,
-            valign: Gtk.Align.CENTER,
+            show_apply_button: true,
         });
-        keyRow.add_suffix(keyEntry);
-        keyRow.set_activatable_widget(keyEntry);
+        keyGroup.add(entryRow);
 
-        // Toggle visibility button
-        const visBtn = new Gtk.ToggleButton({
-            icon_name: 'view-reveal-symbolic',
-            valign: Gtk.Align.CENTER,
-            tooltip_text: 'Show / hide key',
+        const feedbackRow = new Adw.ActionRow({
+            title: 'Status',
+            subtitle: loadKey() ? '✓ Key is saved' : 'No key saved yet — enter your sk-or-… key above and press Enter',
         });
-        visBtn.connect('toggled', () => {
-            keyEntry.set_visibility(visBtn.active);
-            visBtn.icon_name = visBtn.active ? 'view-conceal-symbolic' : 'view-reveal-symbolic';
-        });
-        keyRow.add_suffix(visBtn);
+        keyGroup.add(feedbackRow);
 
-        // Status label
-        const statusLabel = new Gtk.Label({
-            label: '',
-            valign: Gtk.Align.CENTER,
-            css_classes: ['dim-label'],
-        });
-        keyGroup.add(new Adw.ActionRow({ title: '' })); // spacer trick — use real row below
-        // Replace with a proper label row
-        const statusRow = new Adw.ActionRow({ title: 'Status' });
-        statusRow.add_suffix(statusLabel);
-        keyGroup.add(statusRow);
-
-        // Save button
-        const saveBtn = new Gtk.Button({
-            label: 'Save Key',
-            css_classes: ['suggested-action'],
-            valign: Gtk.Align.CENTER,
-        });
-        saveBtn.connect('clicked', () => {
-            const key = keyEntry.text.trim();
+        entryRow.connect('apply', () => {
+            const key = entryRow.text.trim();
             if (!key) {
-                // Clear key
                 try { Gio.File.new_for_path(KEY_FILE).delete(null); } catch (_) {}
-                statusLabel.label = 'Key cleared.';
+                feedbackRow.subtitle = 'Key cleared.';
                 return;
             }
             if (!KEY_PATTERN.test(key)) {
-                statusLabel.label = '⚠ Does not look like a valid sk-or-… key.';
+                feedbackRow.subtitle = '⚠ Doesn\'t look like a valid sk-or-… key';
                 return;
             }
             saveKey(key);
-            statusLabel.label = '✓ Saved.';
+            feedbackRow.subtitle = '✓ Saved — reload the extension to apply';
         });
-        keyRow.add_suffix(saveBtn);
 
-        // ── Refresh interval group ─────────────────────────────────────────
-        const refreshGroup = new Adw.PreferencesGroup({ title: 'Refresh Interval' });
+        // ── Refresh Interval ───────────────────────────────────────────────
+        const refreshGroup = new Adw.PreferencesGroup({
+            title: 'Refresh Interval',
+        });
         page.add(refreshGroup);
 
         const prefs = loadPrefs();
-        const refreshRow = new Adw.ActionRow({
-            title: 'Interval (seconds)',
-            subtitle: 'Minimum 30 s. Changes take effect after the next refresh cycle.',
+        const spinRow = new Adw.ActionRow({
+            title: 'Poll every',
+            subtitle: 'How often to fetch your usage from OpenRouter (min 30 s)',
         });
-        refreshGroup.add(refreshRow);
+        refreshGroup.add(spinRow);
 
         const spin = new Gtk.SpinButton({
             adjustment: new Gtk.Adjustment({
@@ -145,6 +129,16 @@ export default class OpenRouterPreferences extends ExtensionPreferences {
         spin.connect('value-changed', () => {
             savePrefs({ ...loadPrefs(), refresh_seconds: spin.value });
         });
-        refreshRow.add_suffix(spin);
+        spinRow.add_suffix(spin);
+
+        // ── Reload hint ────────────────────────────────────────────────────
+        const hintGroup = new Adw.PreferencesGroup();
+        page.add(hintGroup);
+
+        hintGroup.add(new Adw.ActionRow({
+            title: 'To reload after changes',
+            subtitle: 'gnome-extensions disable openrouter-usage-checker@local && gnome-extensions enable openrouter-usage-checker@local',
+            css_classes: ['property'],
+        }));
     }
 }

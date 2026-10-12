@@ -31,24 +31,27 @@ export default class OpenRouterUsageExtension extends Extension {
 
         this._button = new PanelMenu.Button(0.0, this.metadata?.name ?? 'OpenRouter Usage');
 
-        // Wrapper box so icon + label sit centered in the panel bar
+        // BoxLayout — x_align/y_align use Clutter.ActorAlign: FILL=0 START=1 END=2 CENTER=3 BASELINE=4
         const box = new St.BoxLayout({
             vertical: false,
-            y_align: 1, // Clutter.ActorAlign.CENTER
-            style: 'spacing: 4px;',
+            x_align: 3, // CENTER
+            y_align: 3, // CENTER
+            style: 'spacing: 5px;',
         });
 
-        // Small dot icon — subtle, techy, color will follow label state
+        // Subtle hexagon icon — techy, small, sits next to the amount
         this._icon = new St.Label({
-            text: '⬡',   // hexagon: techy, minimal, works at small size
-            y_align: 1,  // Clutter.ActorAlign.CENTER
-            style: 'font-size: 10px; color: #888; padding-bottom: 1px;',
+            text: '⬡',
+            x_align: 3,
+            y_align: 3,
+            style: 'font-size: 9px; color: #666;',
         });
 
         this._label = new St.Label({
             text: 'OR',
-            y_align: 1,  // Clutter.ActorAlign.CENTER
-            style: 'font-size: 12px;',
+            x_align: 3,
+            y_align: 3,
+            style: 'font-size: 11px;',
         });
 
         box.add_child(this._icon);
@@ -75,6 +78,9 @@ export default class OpenRouterUsageExtension extends Extension {
         this._openKeyItem = this._addItem('⬡  OpenRouter keys page', true);
         this._openKeyItem.connect('activate', () => this._openUrl(KEYS_URL));
 
+        this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this._addItem('by Ammar', false);
+
         Main.panel.addToStatusArea(this.uuid, this._button);
         this._applyRefreshInterval();
         this._refresh();
@@ -86,6 +92,7 @@ export default class OpenRouterUsageExtension extends Extension {
         this._button?.destroy();
         this._button = null;
         this._label = null;
+        this._icon = null;
         this._statusItem = null;
         this._valueItems = [];
         this._session = null;
@@ -172,6 +179,10 @@ export default class OpenRouterUsageExtension extends Extension {
         this._label.style = colors[level]
             ? `color: ${colors[level]}; font-weight: bold;`
             : '';
+        // Keep icon dim unless critical/warn
+        if (this._icon) {
+            this._icon.style = `font-size: 9px; color: ${colors[level] ?? '#666'};`;
+        }
     }
 
     _setRows(lines) {
