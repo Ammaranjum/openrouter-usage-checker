@@ -1,4 +1,6 @@
-// OpenRouter Usage Checker — a GNOME Shell panel indicator that shows remaining OpenRouter credit.
+// OpenRouter Usage Checker — GNOME Shell panel indicator
+// Shows remaining OpenRouter credit with color-coded status.
+// Key stored in ~/.config/openrouter-extension/key
 // by Ammar Anjum
 
 import St from 'gi://St';
@@ -12,8 +14,12 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 const API_URL = 'https://openrouter.ai/api/v1/key';
 const KEYS_URL = 'https://openrouter.ai/settings/keys';
-const REFRESH_SECONDS = 120;
+const DEFAULT_REFRESH_SECONDS = 120;
 const KEY_PATTERN = /sk-or-[A-Za-z0-9_.-]{16,}/;
+
+const CONFIG_DIR = GLib.build_filenamev([GLib.get_user_config_dir(), 'openrouter-extension']);
+const KEY_FILE   = GLib.build_filenamev([CONFIG_DIR, 'key']);
+const PREFS_FILE = GLib.build_filenamev([CONFIG_DIR, 'prefs.json']);
 
 export default class OpenRouterUsageExtension extends Extension {
     enable() {
@@ -24,38 +30,58 @@ export default class OpenRouterUsageExtension extends Extension {
         this._session.timeout = 15;
 
         this._button = new PanelMenu.Button(0.0, this.metadata?.name ?? 'OpenRouter Usage');
-        this._label = new St.Label({
-            text: 'OR —',
-            style_class: 'system-status-icon',
+
+        // Wrapper box so icon + label sit centered in the panel bar
+        const box = new St.BoxLayout({
+            vertical: false,
+            y_align: 1, // Clutter.ActorAlign.CENTER
+            style: 'spacing: 4px;',
         });
-        this._button.add_child(this._label);
 
-        this._statusItem = this._addItem('Loading usage…', false);
+        // Small dot icon — subtle, techy, color will follow label state
+        this._icon = new St.Label({
+            text: '⬡',   // hexagon: techy, minimal, works at small size
+            y_align: 1,  // Clutter.ActorAlign.CENTER
+            style: 'font-size: 10px; color: #888; padding-bottom: 1px;',
+        });
+
+        this._label = new St.Label({
+            text: 'OR',
+            y_align: 1,  // Clutter.ActorAlign.CENTER
+            style: 'font-size: 12px;',
+        });
+
+        box.add_child(this._icon);
+        box.add_child(this._label);
+        this._button.add_child(box);
+
+        // Status row
+        this._statusItem = this._addItem('Loading…', false);
         this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        for (let i = 0; i < 10; i++)
+
+        // Data rows (up to 8 lines of info)
+        for (let i = 0; i < 8; i++)
             this._valueItems.push(this._addItem('', false));
+
         this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-        this._refreshItem = this._addItem('Refresh now', true);
+        // Actions
+        this._refreshItem = this._addItem('↻  Refresh now', true);
         this._refreshItem.connect('activate', () => this._refresh());
 
-        this._openKeyItem = this._addItem('Open OpenRouter API keys page', true);
+        this._setKeyItem = this._addItem('⚙  Preferences…', true);
+        this._setKeyItem.connect('activate', () => this.openPreferences());
+
+        this._openKeyItem = this._addItem('⬡  OpenRouter keys page', true);
         this._openKeyItem.connect('activate', () => this._openUrl(KEYS_URL));
 
         Main.panel.addToStatusArea(this.uuid, this._button);
-        this._log('enabled');
+        this._applyRefreshInterval();
         this._refresh();
-        this._timer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, REFRESH_SECONDS, () => {
-            this._refresh();
-            return GLib.SOURCE_CONTINUE;
-        });
     }
 
     disable() {
-        if (this._timer) {
-            GLib.source_remove(this._timer);
-            this._timer = 0;
-        }
+        this._clearTimer();
         this._session?.abort();
         this._button?.destroy();
         this._button = null;
@@ -66,82 +92,107 @@ export default class OpenRouterUsageExtension extends Extension {
         this._lastStatus = null;
     }
 
+    // ── timer ──────────────────────────────────────────────────────────────
+
+    _applyRefreshInterval() {
+        this._clearTimer();
+        const secs = this._loadRefreshSeconds();
+        this._timer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, secs, () => {
+            this._refresh();
+            return GLib.SOURCE_CONTINUE;
+        });
+    }
+
+    _clearTimer() {
+        if (this._timer) {
+            GLib.source_remove(this._timer);
+            this._timer = 0;
+        }
+    }
+
+    // ── config helpers ─────────────────────────────────────────────────────
+
+    _loadKey() {
+        try {
+            const file = Gio.File.new_for_path(KEY_FILE);
+            if (!file.query_exists(null)) return null;
+            const [, bytes] = file.load_contents(null);
+            const key = new TextDecoder().decode(bytes).trim();
+            return KEY_PATTERN.test(key) ? key : null;
+        } catch (_) { return null; }
+    }
+
+    _loadRefreshSeconds() {
+        try {
+            const file = Gio.File.new_for_path(PREFS_FILE);
+            if (!file.query_exists(null)) return DEFAULT_REFRESH_SECONDS;
+            const [, bytes] = file.load_contents(null);
+            const prefs = JSON.parse(new TextDecoder().decode(bytes));
+            const v = Number(prefs.refresh_seconds);
+            return (Number.isFinite(v) && v >= 30) ? v : DEFAULT_REFRESH_SECONDS;
+        } catch (_) { return DEFAULT_REFRESH_SECONDS; }
+    }
+
+    // ── ui helpers ─────────────────────────────────────────────────────────
+
     _addItem(text, reactive) {
         const item = new PopupMenu.PopupMenuItem(text, { reactive: !!reactive });
         this._button.menu.addMenuItem(item);
         return item;
     }
 
-    /* gnome-shell swallows info-level GJS output, so diagnostics are emitted as
-       warnings/errors — that keeps `journalctl -f` useful when the indicator
-       misbehaves. Only state changes are logged, not every poll. */
-    _log(message, level) {
-        const text = `[${this.uuid}] ${message}`;
-        if (level === 'crit' || level === 'error')
-            console.error(text);
-        else
-            console.warn(text);
+    _openUrl(url) {
+        try { Gio.AppInfo.launch_default_for_uri(url, null); }
+        catch (e) { this._log(`Could not open ${url}: ${e.message}`); }
     }
 
     _maskKey(key) {
-        if (!key || key.length < 14)
-            return '(empty)';
+        if (!key || key.length < 14) return '(empty)';
         return `${key.slice(0, 8)}…${key.slice(-4)}`;
     }
 
-    _openUrl(url) {
-        try {
-            Gio.AppInfo.launch_default_for_uri(url, null);
-        } catch (e) {
-            this._log(`Could not open ${url}: ${e.message}`);
-        }
+    _log(msg, level) {
+        const text = `[${this.uuid}] ${msg}`;
+        (level === 'error' || level === 'crit') ? console.error(text) : console.warn(text);
     }
 
+    // ── panel label + status ───────────────────────────────────────────────
+
     _setStatus(message, panelText, level) {
-        if (!this._label || !this._statusItem)
-            return;
-        // Log once per state change instead of every poll, so the journal stays usable.
+        if (!this._label || !this._statusItem) return;
         if (message !== this._lastStatus) {
             this._lastStatus = message;
             this._log(message, level);
         }
         this._statusItem.label.text = message;
         this._label.text = panelText;
-        const styles = {
-            crit: 'color: #ff6b6b; font-weight: bold;',
-            warn: 'color: #ffbf47;',
-        };
-        this._label.style = styles[level] ?? '';
+
+        // Color-coded panel label: red = critical, amber = warn, default = ok
+        const colors = { crit: '#ff6b6b', warn: '#ffbf47' };
+        this._label.style = colors[level]
+            ? `color: ${colors[level]}; font-weight: bold;`
+            : '';
     }
 
     _setRows(lines) {
         for (let i = 0; i < this._valueItems.length; i++) {
             const item = this._valueItems[i];
-            if (!item || !item.label)
-                continue;
+            if (!item?.label) continue;
             item.visible = i < lines.length;
-            if (item.visible)
-                item.label.text = lines[i];
+            if (item.visible) item.label.text = lines[i];
         }
     }
 
-    _getKeyFromEnv() {
-        const key = (GLib.getenv('OPENROUTER_API_KEY') ?? '').trim();
-        return key || null;
-    }
+    // ── fetch / render ─────────────────────────────────────────────────────
 
     _refresh() {
-        if (!this._button)
-            return;
-        const key = this._getKeyFromEnv();
+        if (!this._button) return;
+        const key = this._loadKey();
         if (!key) {
-            this._keySource = null;
-            this._maskedKey = null;
             this._setRows([]);
-            this._setStatus('OPENROUTER_API_KEY environment variable is not set.', 'OR —', 'none');
+            this._setStatus('No API key set — open Preferences to add one.', 'OR', 'warn');
             return;
         }
-        this._keySource = 'OPENROUTER_API_KEY';
         this._maskedKey = this._maskKey(key);
         this._fetch(key);
     }
@@ -152,9 +203,7 @@ export default class OpenRouterUsageExtension extends Extension {
         message.request_headers.append('Accept', 'application/json');
 
         this._session.send_and_read_async(message, GLib.PRIORITY_DEFAULT, null, (session, result) => {
-            if (!this._button)
-                return;
-
+            if (!this._button) return;
             let body;
             try {
                 const bytes = session.send_and_read_finish(result);
@@ -167,13 +216,9 @@ export default class OpenRouterUsageExtension extends Extension {
             const status = message.get_status();
             if (status < 200 || status >= 300) {
                 let detail = '';
-                try {
-                    detail = JSON.parse(body)?.error?.message ?? '';
-                } catch (e) {
-                    /* error body is not JSON */
-                }
+                try { detail = JSON.parse(body)?.error?.message ?? ''; } catch (_) {}
                 const label = status === 401
-                    ? 'API key rejected (401) — replace it'
+                    ? 'API key rejected (401) — check Preferences'
                     : `API request failed (${status})`;
                 this._setStatus(
                     `${label}${detail ? `: ${detail}` : ''}.`,
@@ -184,10 +229,9 @@ export default class OpenRouterUsageExtension extends Extension {
             }
 
             let payload;
-            try {
-                payload = JSON.parse(body);
-            } catch (e) {
-                this._setStatus(`Could not parse the API response: ${e.message}`, 'OR !', 'crit');
+            try { payload = JSON.parse(body); }
+            catch (e) {
+                this._setStatus(`Could not parse response: ${e.message}`, 'OR !', 'crit');
                 return;
             }
             this._render(payload?.data);
@@ -196,54 +240,49 @@ export default class OpenRouterUsageExtension extends Extension {
 
     _render(data) {
         if (!data) {
-            this._setStatus('Unexpected response: no “data” object.', 'OR ?', 'warn');
+            this._setStatus('Unexpected response: no "data" object.', 'OR ?', 'warn');
             return;
         }
 
         const money = n => `$${n.toFixed(2)}`;
-        const count = n => (typeof n === 'number' ? n : null);
+        const num   = n => (typeof n === 'number' ? n : null);
 
-        const remaining = count(data.limit_remaining);
-        const limit = count(data.limit);
-        const used = count(data.usage);
-        const pct = limit && limit > 0 && remaining !== null
+        const remaining = num(data.limit_remaining);
+        const limit     = num(data.limit);
+        const used      = num(data.usage);
+        const pct       = (limit > 0 && remaining !== null)
             ? Math.max(0, Math.min(100, (remaining / limit) * 100))
             : null;
 
-        // A key with no cap reports limit/limit_remaining as null: perfectly valid,
-        // so fall back to showing spend instead of failing.
         const lines = [
-            `Key: ${data.label || this._maskedKey || 'OpenRouter key'}`,
+            `Key:       ${data.label || this._maskedKey || 'OpenRouter key'}`,
             remaining !== null
-                ? `Remaining: ${money(remaining)}${pct === null ? '' : ` (${pct.toFixed(1)}%)`}`
-                : 'Remaining: no credit cap on this key',
-            `Used: ${used === null ? 'not reported' : money(used)}`,
-            `Limit: ${limit === null ? 'none' : money(limit)}`,
-            `Resets: ${data.limit_reset || 'never'}`,
-            `Today: ${count(data.usage_daily) === null ? 'n/a' : money(data.usage_daily)}`,
-            `This week: ${count(data.usage_weekly) === null ? 'n/a' : money(data.usage_weekly)}`,
-            `This month: ${count(data.usage_monthly) === null ? 'n/a' : money(data.usage_monthly)}`,
-            `Free-model requests left: ${data.free_model_daily_requests?.remaining ?? 'n/a'} per day`,
-            `Source: ${this._keySource ?? 'unknown'} · updated ${new Date().toLocaleTimeString()}`,
+                ? `Remaining: ${money(remaining)}${pct !== null ? ` (${pct.toFixed(1)}%)` : ''}`
+                : 'Remaining: no credit cap',
+            `Used:      ${used === null ? 'not reported' : money(used)}`,
+            `Limit:     ${limit === null ? 'none' : money(limit)}`,
+            `Resets:    ${data.limit_reset || 'never'}`,
+            `Updated:   ${new Date().toLocaleTimeString()}`,
         ];
         this._setRows(lines);
 
-        let panel;
-        let level = 'ok';
+        // Panel text + color
+        let panel, level;
         if (remaining !== null) {
             panel = `OR ${money(remaining)}`;
             level = pct === null ? 'ok' : pct <= 10 ? 'crit' : pct <= 30 ? 'warn' : 'ok';
         } else if (used !== null) {
-            panel = `OR ${money(used)} used`;
+            panel = `OR ${money(used)}`;
+            level = 'ok';
         } else {
             panel = 'OR ?';
             level = 'warn';
         }
+
         this._setStatus(
-            `Tracking ${data.label || this._maskedKey} (${this._keySource ?? 'unknown source'}).`,
+            `Tracking ${data.label || this._maskedKey}.`,
             panel,
             level
         );
     }
 }
-

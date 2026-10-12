@@ -1,13 +1,13 @@
 {
   "uuid": "openrouter-usage-checker@local",
   "name": "OpenRouter Usage Checker",
-  "description": "A GNOME shell panel indicator that shows how much OpenRouter credit remains on your API key. Reads the key from the OPENROUTER_API_KEY environment variable. By Ammar Anjum.",
+  "description": "GNOME Shell panel indicator showing OpenRouter credit remaining, color-coded by usage. Configure your API key and refresh interval in Preferences.",
   "shell-version": [
     "45",
     "46",
     "47",
     "48"
   ],
-  "version": 2,
+  "version": 3,
   "url": "https://github.com/Ammaranjum/openrouter-usage-checker"
 }
