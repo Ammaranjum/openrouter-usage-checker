@@ -124,26 +124,25 @@ export default class OpenRouterUsageExtension extends Extension {
         }
     }
 
+    _getKeyFromEnv() {
+        const key = (GLib.getenv('OPENROUTER_API_KEY') ?? '').trim();
+        return key || null;
+    }
+
     _refresh() {
         if (!this._button)
             return;
-        this._getKey((key, source, err) => {
-            if (!this._button)
-                return;
-            if (!key) {
-                this._keySource = null;
-                this._maskedKey = null;
-                this._setRows([]);
-                const reason = err && err !== 'no-key'
-                    ? err
-                    : 'OPENROUTER_API_KEY environment variable is not set.';
-                this._setStatus(`${reason}`, 'OR —', 'none');
-                return;
-            }
-            this._keySource = source;
-            this._maskedKey = this._maskKey(key);
-            this._fetch(key);
-        });
+        const key = this._getKeyFromEnv();
+        if (!key) {
+            this._keySource = null;
+            this._maskedKey = null;
+            this._setRows([]);
+            this._setStatus('OPENROUTER_API_KEY environment variable is not set.', 'OR —', 'none');
+            return;
+        }
+        this._keySource = 'OPENROUTER_API_KEY';
+        this._maskedKey = this._maskKey(key);
+        this._fetch(key);
     }
 
     _fetch(key) {
