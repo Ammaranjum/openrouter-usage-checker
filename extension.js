@@ -1,4 +1,5 @@
 // OpenRouter Usage Checker — a GNOME Shell panel indicator that shows remaining OpenRouter credit.
+// by Ammar Anjum
 
 import St from 'gi://St';
 import Gio from 'gi://Gio';

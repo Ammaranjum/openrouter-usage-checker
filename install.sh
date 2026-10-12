@@ -37,7 +37,8 @@ else
     echo "  mkdir -p $ENV_DIR && echo 'OPENROUTER_API_KEY=sk-or-...' > $ENV_FILE && chmod 600 $ENV_FILE"
 fi
 
-gnome-extensions enable "$UUID"
 echo
-echo "enabled. Now log out and log back in (GNOME Shell reads both the code"
-echo "and the environment only at session start)."
+echo "Log out and back in, then run:"
+echo "  gnome-extensions enable $UUID"
+echo ""
+echo "The panel indicator will appear after re-login."
