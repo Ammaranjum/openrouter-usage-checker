@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>OpenRouterUsage</AssemblyName>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <Version>1.4.1</Version>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Core.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="SettingsForm.cs" />
+    <Compile Include="AppTheme.cs" />
+    <Compile Include="UsagePopup.cs" />
+    <EmbeddedResource Include="Assets/*.png" />
+    <EmbeddedResource Include="Assets/LUCIDE-LICENSE" />
+  </ItemGroup>
+</Project>

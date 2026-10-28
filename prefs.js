@@ -7,15 +7,14 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
-const KEY_PATTERN = /sk-or-[A-Za-z0-9_.-]{16,}/;
+const KEY_PATTERN = /^sk-or-[A-Za-z0-9_.-]{16,}$/;
 const CONFIG_DIR  = GLib.build_filenamev([GLib.get_user_config_dir(), 'openrouter-extension']);
 const KEY_FILE    = GLib.build_filenamev([CONFIG_DIR, 'key']);
 const PREFS_FILE  = GLib.build_filenamev([CONFIG_DIR, 'prefs.json']);
 
 function ensureConfigDir() {
-    const dir = Gio.File.new_for_path(CONFIG_DIR);
-    if (!dir.query_exists(null))
-        dir.make_directory_with_parents(null);
+    if (GLib.mkdir_with_parents(CONFIG_DIR, 0o700) !== 0)
+        throw new Error('Could not create configuration directory');
 }
 
 function loadKey() {
@@ -29,8 +28,8 @@ function loadKey() {
 
 function saveKey(key) {
     ensureConfigDir();
-    GLib.file_set_contents(KEY_FILE, key.trim());
-    GLib.chmod(KEY_FILE, 0o600);
+    Gio.File.new_for_path(KEY_FILE).replace_contents(key.trim(), null, false,
+        Gio.FileCreateFlags.PRIVATE | Gio.FileCreateFlags.REPLACE_DESTINATION, null);
 }
 
 function loadPrefs() {
@@ -38,7 +37,9 @@ function loadPrefs() {
         const file = Gio.File.new_for_path(PREFS_FILE);
         if (!file.query_exists(null)) return { refresh_seconds: 120 };
         const [, bytes] = file.load_contents(null);
-        return JSON.parse(new TextDecoder().decode(bytes));
+        const prefs = JSON.parse(new TextDecoder().decode(bytes));
+        return prefs && typeof prefs === 'object' && !Array.isArray(prefs)
+            ? prefs : { refresh_seconds: 120 };
     } catch (_) { return { refresh_seconds: 120 }; }
 }
 
@@ -64,7 +65,7 @@ export default class OpenRouterPreferences extends ExtensionPreferences {
 
         const banner = new Adw.ActionRow({
             title: 'OpenRouter Usage Checker',
-            subtitle: 'by Ammar Anjum',
+            subtitle: 'by Ammar',
             icon_name: 'network-transmit-receive-symbolic',
         });
         aboutGroup.add(banner);
@@ -91,17 +92,22 @@ export default class OpenRouterPreferences extends ExtensionPreferences {
 
         entryRow.connect('apply', () => {
             const key = entryRow.text.trim();
-            if (!key) {
-                try { Gio.File.new_for_path(KEY_FILE).delete(null); } catch (_) {}
-                feedbackRow.subtitle = 'Key cleared.';
-                return;
+            try {
+                if (!key) {
+                    const file = Gio.File.new_for_path(KEY_FILE);
+                    if (file.query_exists(null)) file.delete(null);
+                    feedbackRow.subtitle = 'Key cleared.';
+                    return;
+                }
+                if (!KEY_PATTERN.test(key)) {
+                    feedbackRow.subtitle = '⚠ Doesn\'t look like a valid sk-or-… key';
+                    return;
+                }
+                saveKey(key);
+                feedbackRow.subtitle = '✓ Saved — usage will refresh automatically';
+            } catch (_) {
+                feedbackRow.subtitle = '⚠ Could not save the key — check configuration folder permissions';
             }
-            if (!KEY_PATTERN.test(key)) {
-                feedbackRow.subtitle = '⚠ Doesn\'t look like a valid sk-or-… key';
-                return;
-            }
-            saveKey(key);
-            feedbackRow.subtitle = '✓ Saved — reload the extension to apply';
         });
 
         // ── Refresh Interval ───────────────────────────────────────────────
@@ -113,7 +119,7 @@ export default class OpenRouterPreferences extends ExtensionPreferences {
         const prefs = loadPrefs();
         const spinRow = new Adw.ActionRow({
             title: 'Poll every',
-            subtitle: 'How often to fetch your usage from OpenRouter (min 30 s)',
+            subtitle: 'How often to fetch usage (30–3600 s). Changes apply automatically.',
         });
         refreshGroup.add(spinRow);
 
@@ -127,7 +133,12 @@ export default class OpenRouterPreferences extends ExtensionPreferences {
             valign: Gtk.Align.CENTER,
         });
         spin.connect('value-changed', () => {
-            savePrefs({ ...loadPrefs(), refresh_seconds: spin.value });
+            try {
+                savePrefs({ ...loadPrefs(), refresh_seconds: spin.value });
+                spinRow.subtitle = 'Saved — changes apply automatically';
+            } catch (_) {
+                spinRow.subtitle = 'Could not save the interval — check folder permissions';
+            }
         });
         spinRow.add_suffix(spin);
 
@@ -136,8 +147,8 @@ export default class OpenRouterPreferences extends ExtensionPreferences {
         page.add(hintGroup);
 
         hintGroup.add(new Adw.ActionRow({
-            title: 'To reload after changes',
-            subtitle: 'gnome-extensions disable openrouter-usage-checker@local && gnome-extensions enable openrouter-usage-checker@local',
+            title: 'Daily usage uses UTC',
+            subtitle: 'Key and interval changes apply automatically. After installing code updates, log out and back in.',
             css_classes: ['property'],
         }));
     }
