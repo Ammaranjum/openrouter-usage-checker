@@ -3,10 +3,16 @@
 A small OpenRouter usage indicator for **Windows** and **Ubuntu / GNOME Linux**,
 with daily history saved locally. Made by Ammar.
 
-## Choose your version
+## Download
 
-- **Windows 10/11 (64-bit):** [Download OpenRouterUsage.exe](https://github.com/Ammaranjum/openrouter-usage-checker/releases/latest/download/OpenRouterUsage.exe), double-click it, enter your API key, and save. No installer, administrator access, or separate .NET installation is needed. See the [Windows guide](windows/README.md).
-- **Ubuntu / GNOME Linux:** follow the [setup commands below](#ubuntu--gnome-linux-setup), then enter your key in Preferences.
+**[Download for Windows — 64-bit EXE](https://github.com/Ammaranjum/openrouter-usage-checker/releases/latest/download/OpenRouterUsage.exe)**
+
+Download → double-click → enter your OpenRouter key. No installer or Git required.
+See [Windows setup](#windows-setup) for details.
+
+**[Install on Ubuntu / GNOME Linux](#ubuntu--gnome-linux-setup)**
+
+Use the setup commands below, then log out and back in.
 
 Ubuntu is a Linux distribution. The Linux version requires GNOME Shell 45–48;
 it is not an extension for every Linux desktop.
@@ -159,3 +165,19 @@ gjs -m tests/history-check.mjs
 Both checks use synthetic data and temporary files, without network requests or
 access to your saved API key. They test the actual extension methods; they do
 not replace visual testing inside GNOME Shell.
+
+## Publishing a new release
+
+Keep source code in this repository and distribute the Windows EXE through
+[GitHub Releases](https://github.com/Ammaranjum/openrouter-usage-checker/releases).
+Do not commit generated EXEs or build folders to Git.
+
+1. Push the source commit to `main`.
+2. [Create a release](https://github.com/Ammaranjum/openrouter-usage-checker/releases/new) with tag `v1.4.1` for the current version.
+3. Upload `windows/dist/win-x64/OpenRouterUsage.exe` as an asset named **OpenRouterUsage.exe**.
+4. Mark the release **Latest** and publish it.
+
+The download button above becomes available after the EXE is uploaded and the
+release is published. Every future release marked Latest must include an asset
+named `OpenRouterUsage.exe` to keep that button working. Visitors should download
+the EXE asset; GitHub's **Source code** ZIP is for developers.
