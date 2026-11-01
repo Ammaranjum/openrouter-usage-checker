@@ -6,6 +6,12 @@ packages, analytics, or management key required.
 
 ## Download and install
 
+Mac app version **1.0.1** fixes the invisible-interface launch failure reported
+in 1.0.0. Launch opens a usage/settings window and creates an **OR** menu bar
+button. Closing the window leaves the collector running. Open the app again
+from Applications to restore the window if the menu bar button is unavailable.
+
+
 [Download OpenRouterUsage-macOS-universal.zip](https://github.com/Ammaranjum/openrouter-usage-checker/releases/latest/download/OpenRouterUsage-macOS-universal.zip)
 
 1. Double-click the ZIP to extract it.
@@ -15,7 +21,7 @@ packages, analytics, or management key required.
    [Apple's guidance](https://support.apple.com/en-us/102445). If you trust this
    download, use **System Settings → Privacy & Security → Open Anyway** and
    confirm the app name. An organization-managed Mac may disallow exceptions.
-4. Click the chart icon in the menu bar, enter your OpenRouter key, and choose
+4. Click **OR** in the menu bar, enter your OpenRouter key, and choose
    **Save and refresh**. The app has no Dock icon.
 
 No Xcode, terminal commands, or compilation is needed for this download.
@@ -36,8 +42,7 @@ open "macos/dist/OpenRouter Usage.app"
 
 The script runs the Swift tests, builds both architectures, generates the icon,
 and packages `macos/dist/OpenRouterUsage-macOS-universal.zip`. Drag **OpenRouter
-Usage.app** into **Applications** before enabling **Open at login**. Click the
-chart icon in the menu bar, paste your key, and choose **Save and refresh**.
+Usage.app** into **Applications** before enabling **Open at login**. Click **OR** in the menu bar, paste your key, and choose **Save and refresh**.
 This is a menu bar app; it has no Dock icon. Quit from its panel.
 
 Local builds are ad-hoc signed for development. The release download is the same
@@ -46,7 +51,7 @@ It is not notarized. Do not disable Gatekeeper globally.
 
 ## Interface
 
-The compact panel uses SwiftUI controls, system typography, semantic colors,
+The compact panel and window use SwiftUI controls, system typography, semantic colors,
 SF Symbols, native keyboard focus, and system light/dark appearance. No custom
 motion is added. It includes:
 
@@ -113,7 +118,7 @@ and signing team stable across updates so Keychain and sandbox identity remain
 consistent. Signing/notarization must succeed before calling this ready for
 public distribution. This is not an App Store submission or a security audit.
 
-References: [MenuBarExtra](https://developer.apple.com/documentation/swiftui/menubarextra),
+References: [NSStatusBar](https://developer.apple.com/documentation/appkit/nsstatusbar),
 [Keychain Services](https://developer.apple.com/documentation/security/keychain-services),
 [App Sandbox](https://developer.apple.com/documentation/security/app-sandbox),
 [Apple notarization](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution),
@@ -130,7 +135,12 @@ Tests cover input and numeric validation, unknown versus zero, key fingerprints,
 UTC rollover, replacement rather than addition, older-observation rejection,
 per-key separation, private file permissions, and corrupt-file preservation.
 The build script also compiles the UI, verifies its signature, and verifies both
-binary architectures. CI runs on a Mac; it does not publish releases.
+binary architectures. CI then runs `python3 macos/check-startup.py` against the
+packaged app: it verifies the native status item, an actual visible setup window,
+menu bar click handling, window close/reopen, and a blocked/failed Keychain read.
+It uses an injected credential reader and makes no API requests or real Keychain
+reads. CI saves a screenshot of the setup window. These checks do not replace
+acceptance on the affected MacBook. CI does not publish releases.
 
 Before release, test the packaged app on actual Apple Silicon and Intel Macs:
 first-run save, rejected key, offline/timeouts, refresh after sleep/UTC midnight,

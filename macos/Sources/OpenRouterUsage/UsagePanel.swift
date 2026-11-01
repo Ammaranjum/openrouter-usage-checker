@@ -5,6 +5,7 @@ import UsageCore
 @MainActor
 struct UsagePanel: View {
     @ObservedObject var model: UsageModel
+    var openWindow: (() -> Void)? = nil
     @State private var draftKey = ""
     @State private var confirmDelete = false
     @State private var historyVisible = false
@@ -73,6 +74,9 @@ struct UsagePanel: View {
                 HStack {
                     Link("OpenRouter keys", destination: URL(string: "https://openrouter.ai/settings/keys")!)
                     Spacer()
+                    if let openWindow {
+                        Button("Open window", action: openWindow)
+                    }
                     Button("Quit") { NSApplication.shared.terminate(nil) }.keyboardShortcut("q")
                 }.font(.callout)
             }

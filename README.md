@@ -36,12 +36,16 @@ storage, local daily history, and optional launch at login.
    [Apple's instructions](https://support.apple.com/en-us/102445). If you trust
    this download, use **System Settings → Privacy & Security → Open Anyway**
    and confirm the app name. Managed Macs may prevent this exception.
-4. Click the chart icon in the menu bar, enter your own OpenRouter key, and
+4. Click **OR** in the menu bar, enter your own OpenRouter key, and
    choose **Save and refresh**. There is no Dock icon.
 
 This is an ad-hoc-signed preview, not an Apple-notarized release. The universal
 package passes Mac CI tests and build checks; interactive use on real Macs has
 not been verified. See the [Mac guide](macos/README.md) for details.
+
+Mac app **1.0.1** opens a usage/settings window on launch and adds **OR** to
+the menu bar. Closing the window keeps the app running. Open it again from
+Applications to restore the window if the menu bar button is unavailable.
 
 ## Windows setup
 

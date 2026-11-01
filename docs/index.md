@@ -34,6 +34,10 @@ Mac CI tests and builds pass; interactive use on real Macs remains unverified.
 
 [Mac setup guide](https://github.com/Ammaranjum/openrouter-usage-checker/blob/main/macos/README.md)
 
+Mac app **1.0.1** opens a usage/settings window on launch and adds **OR** to
+the menu bar. Closing the window keeps the app running. Open it again from
+Applications to restore the window if the menu bar button is unavailable.
+
 ## Ubuntu / GNOME Linux
 
 Requires GNOME Shell 45–48.

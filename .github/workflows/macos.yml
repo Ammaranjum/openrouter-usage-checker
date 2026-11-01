@@ -14,9 +14,17 @@ jobs:
       - uses: actions/checkout@v4
       - name: Test and build universal development app
         run: ./macos/build.sh
+      - name: Launch packaged app and check menu bar and settings
+        run: python3 macos/check-startup.py
       - name: Upload development build (not notarized)
         uses: actions/upload-artifact@v4
         with:
           name: OpenRouterUsage-macOS-development
           path: macos/dist/OpenRouterUsage-macOS-universal.zip
+          if-no-files-found: error
+      - name: Upload startup window screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: macOS-startup-check
+          path: macos/dist/startup-check.png
           if-no-files-found: error

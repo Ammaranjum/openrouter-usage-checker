@@ -12,8 +12,8 @@ final class UsageModel: ObservableObject {
     @Published private(set) var hasKey = false
     @Published var error: String?
     @Published var historyWarning: String?
-    @Published var settingsVisible = false
-    @Published var loginEnabled = SMAppService.mainApp.status == .enabled
+    @Published var settingsVisible = true
+    @Published var loginEnabled = false
     @Published var interval: Int {
         didSet {
             UserDefaults.standard.set(interval, forKey: "refreshSeconds")
@@ -27,6 +27,7 @@ final class UsageModel: ObservableObject {
     private var request: Task<Void, Never>?
     private var timer: Timer?
     private var generation = UUID()
+    private var started = false
     private let history: HistoryStore
 
     init() {
@@ -35,15 +36,29 @@ final class UsageModel: ObservableObject {
         showAmount = UserDefaults.standard.bool(forKey: "showMenuAmount")
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         history = HistoryStore(directory: support.appendingPathComponent("OpenRouterUsage", isDirectory: true))
+        scheduleRefresh()
+    }
+
+    // Keychain can wait for user interaction. Never hold up status item/window creation.
+    func start(readKey: @escaping @Sendable () throws -> String? = { try Keychain.load() }) async {
+        guard !started else { return }
+        started = true
+        let token = generation
         do {
-            if let saved = try Keychain.load() {
+            let saved = try await Task.detached(priority: .userInitiated, operation: readKey).value
+            // A key saved/deleted while Keychain was loading takes precedence.
+            guard token == generation else { return }
+            if let saved {
                 key = try validatedKey(saved)
                 hasKey = true
                 loadHistory()
             }
-        } catch { self.error = "Could not read the saved key. Unlock your Mac or replace the key in Settings." }
+        } catch {
+            guard token == generation else { return }
+            self.error = "Could not read the saved key. Unlock your Mac or replace the key in Settings."
+        }
+        refreshLoginStatus()
         settingsVisible = !hasKey
-        scheduleRefresh()
         refresh()
     }
 
@@ -124,8 +139,14 @@ final class UsageModel: ObservableObject {
     }
 
     func refreshIfStale() {
-        loginEnabled = SMAppService.mainApp.status == .enabled
+        refreshLoginStatus()
         if !refreshing && (updated == nil || Date().timeIntervalSince(updated!) >= Double(interval)) { refresh() }
+    }
+
+    private func refreshLoginStatus() {
+        Task {
+            loginEnabled = await Task.detached { SMAppService.mainApp.status == .enabled }.value
+        }
     }
 
     private func resetRequest() {
