@@ -9,7 +9,12 @@ permissions:
   contents: read
 jobs:
   build:
-    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - name: Test and build universal development app
@@ -19,12 +24,12 @@ jobs:
       - name: Upload development build (not notarized)
         uses: actions/upload-artifact@v4
         with:
-          name: OpenRouterUsage-macOS-development
+          name: OpenRouterUsage-macOS-development-${{ matrix.runner }}
           path: macos/dist/OpenRouterUsage-macOS-universal.zip
           if-no-files-found: error
       - name: Upload startup window screenshot
         uses: actions/upload-artifact@v4
         with:
-          name: macOS-startup-check
-          path: macos/dist/startup-check.png
+          name: macOS-startup-check-${{ matrix.runner }}
+          path: macos/dist/startup-check-*.png
           if-no-files-found: error

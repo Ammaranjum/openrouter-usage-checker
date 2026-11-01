@@ -23,7 +23,7 @@ and optional launch at login. It supports Apple Silicon and Intel.
 **[Download Mac ZIP — Apple Silicon and Intel](https://github.com/Ammaranjum/openrouter-usage-checker/releases/latest/download/OpenRouterUsage-macOS-universal.zip)**
 
 No Xcode or compilation is needed. Double-click the ZIP, drag **OpenRouter
-Usage.app** to **Applications**, and open it. Click the chart icon in the menu
+Usage.app** to **Applications**, and open it. Click **OR** in the menu
 bar to enter your key. There is no Dock icon.
 
 This preview is ad-hoc signed and **not notarized by Apple**. If macOS blocks

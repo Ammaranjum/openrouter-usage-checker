@@ -138,9 +138,18 @@ The build script also compiles the UI, verifies its signature, and verifies both
 binary architectures. CI then runs `python3 macos/check-startup.py` against the
 packaged app: it verifies the native status item, an actual visible setup window,
 menu bar click handling, window close/reopen, and a blocked/failed Keychain read.
-It uses an injected credential reader and makes no API requests or real Keychain
-reads. CI saves a screenshot of the setup window. These checks do not replace
-acceptance on the affected MacBook. CI does not publish releases.
+It also checks empty/invalid saved keys and unknown remaining cap. The launch
+check extracts the release ZIP, verifies its signature, and launches it directly
+and through LaunchServices, on both Apple Silicon and Intel Mac runners. It
+makes no API requests and never reads the normal saved-key service. A separate
+round trip saves, reads, replaces, and deletes a synthetic key in a unique
+Keychain service. CI saves a screenshot of the setup window for each launch
+path. These checks do not replace acceptance on the affected MacBook.
+CI does not publish releases.
+
+Finally, an external WindowServer probe verifies a visible window from the
+ordinary app executable with no startup-check flag. It checks the shipped
+startup path independently of the in-app assertions.
 
 Before release, test the packaged app on actual Apple Silicon and Intel Macs:
 first-run save, rejected key, offline/timeouts, refresh after sleep/UTC midnight,

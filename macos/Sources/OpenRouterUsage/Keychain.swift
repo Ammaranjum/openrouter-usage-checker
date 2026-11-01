@@ -3,9 +3,12 @@ import Security
 
 // Only the credential lives here. No iCloud synchronization or shared access group.
 enum Keychain {
+    // Explicit startup checks use an isolated synthetic item, never a user's key.
+    private static let service = "com.ammaranjum.openrouter-usage" +
+        (CommandLine.arguments.contains("--startup-check") ? ".startup-check." + UUID().uuidString : "")
     private static var query: [String: Any] {
         [kSecClass as String: kSecClassGenericPassword,
-         kSecAttrService as String: "com.ammaranjum.openrouter-usage",
+         kSecAttrService as String: service,
          kSecAttrAccount as String: "openrouter-api-key"]
     }
 
@@ -17,7 +20,7 @@ enum Keychain {
         let status = SecItemCopyMatching(lookup as CFDictionary, &result)
         if status == errSecItemNotFound { return nil }
         guard status == errSecSuccess, let data = result as? Data,
-              let key = String(data: data, encoding: .utf8) else { throw Failure() }
+              let key = String(data: data, encoding: .utf8) else { throw Failure(status: status) }
         return key
     }
 
@@ -29,16 +32,18 @@ enum Keychain {
         let status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
         if status == errSecItemNotFound {
             let item = query.merging(attributes) { _, new in new }
-            guard SecItemAdd(item as CFDictionary, nil) == errSecSuccess else { throw Failure() }
-        } else if status != errSecSuccess { throw Failure() }
+            let added = SecItemAdd(item as CFDictionary, nil)
+            guard added == errSecSuccess else { throw Failure(status: added) }
+        } else if status != errSecSuccess { throw Failure(status: status) }
     }
 
     static func delete() throws {
         let status = SecItemDelete(query as CFDictionary)
-        guard status == errSecSuccess || status == errSecItemNotFound else { throw Failure() }
+        guard status == errSecSuccess || status == errSecItemNotFound else { throw Failure(status: status) }
     }
 
     struct Failure: LocalizedError {
+        var status: OSStatus? = nil
         var errorDescription: String? { "Keychain is unavailable or access was denied. Unlock your Mac and try again." }
     }
 }
