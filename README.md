@@ -203,7 +203,7 @@ Keep source code in this repository and distribute the Windows EXE through
 Do not commit generated EXEs or build folders to Git.
 
 1. Push the source commit to `main`.
-2. [Create a release](https://github.com/Ammaranjum/openrouter-usage-checker/releases/new) with tag `v1.4.2` for the current version.
+2. [Create a release](https://github.com/Ammaranjum/openrouter-usage-checker/releases/new) with tag `v1.4.3` for this Mac startup repair (Windows remains version 1.4.2).
 3. Upload `windows/dist/win-x64/OpenRouterUsage.exe` as an asset named **OpenRouterUsage.exe**.
 4. Mark the release **Latest** and publish it.
 
