@@ -1,0 +1,22 @@
+name: macOS companion
+on:
+  workflow_dispatch:
+  push:
+    paths: ['macos/**', '.github/workflows/macos.yml']
+  pull_request:
+    paths: ['macos/**', '.github/workflows/macos.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test and build universal development app
+        run: ./macos/build.sh
+      - name: Upload development build (not notarized)
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenRouterUsage-macOS-development
+          path: macos/dist/OpenRouterUsage-macOS-universal.zip
+          if-no-files-found: error

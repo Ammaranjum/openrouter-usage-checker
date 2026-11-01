@@ -24,15 +24,12 @@ internal static class Program
         foreach (var button in buttons)
             Check(button.Height >= button.GetPreferredSize(Size.Empty).Height, "Completion button has its full preferred height");
         var credit = All(settings).OfType<Label>().Single(l => l.Text == "Made by Ammar");
-        var coffee = All(settings).OfType<Label>().Single(l => l.Text == "Buy me a Coffee ☕");
         int buttonBottom = buttons.Max(b => b.PointToScreen(new Point(0, b.Height)).Y);
-        int footerTop = Math.Min(credit.PointToScreen(Point.Empty).Y, coffee.PointToScreen(Point.Empty).Y);
+        int footerTop = credit.PointToScreen(Point.Empty).Y;
         Check(footerTop - buttonBottom >= (int)Math.Round(12 * settings.DeviceDpi / 96f), "Footer has at least 12 logical pixels below buttons");
         var key = All(settings).OfType<TextBox>().Single();
-        var show = All(settings).OfType<Button>().Single(b => b.AccessibleName == "Show API key");
-        Check(credit.PointToScreen(Point.Empty).X == key.PointToScreen(Point.Empty).X &&
-            coffee.PointToScreen(new Point(coffee.Width, 0)).X == show.PointToScreen(new Point(show.Width, 0)).X,
-            "Footer aligns with the key row outer edges");
+        Check(credit.PointToScreen(Point.Empty).X == key.PointToScreen(Point.Empty).X,
+            "Signature aligns with the key row left edge");
         using var savedInterval = new SettingsForm(new AppSettings(RefreshSeconds: 600));
         Check(All(savedInterval).OfType<ComboBox>().Single().Text == "10 minutes", "A saved interval stays selected");
         using var customInterval = new SettingsForm(new AppSettings(RefreshSeconds: 660));

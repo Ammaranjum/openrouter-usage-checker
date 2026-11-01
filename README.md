@@ -1,7 +1,9 @@
 # OpenRouter Usage Checker
 
-A small OpenRouter usage indicator for **Windows** and **Ubuntu / GNOME Linux**,
+A small OpenRouter usage indicator for **macOS**, **Windows**, and **Ubuntu / GNOME Linux**,
 with daily history saved locally. Made by Ammar.
+
+[Setup and downloads](https://ammaranjum.github.io/openrouter-usage-checker/) · [Changelog](CHANGELOG.md)
 
 ## Download
 
@@ -16,6 +18,17 @@ Use the setup commands below, then log out and back in.
 
 Ubuntu is a Linux distribution. The Linux version requires GNOME Shell 45–48;
 it is not an extension for every Linux desktop.
+
+## macOS setup
+
+The native [Mac companion](macos/README.md) supports **macOS 13 or later** on
+Apple Silicon and Intel. It provides a SwiftUI menu bar panel, Keychain credential
+storage, local daily history, and optional launch at login.
+
+Build on a Mac with Xcode command line tools: `./macos/build.sh`, then move
+`macos/dist/OpenRouter Usage.app` to Applications and open it. Click the chart
+icon to add your OpenRouter key. A signed, notarized Mac download has not been
+published yet; see the Mac guide for build and distribution instructions.
 
 ## Windows setup
 
@@ -173,7 +186,7 @@ Keep source code in this repository and distribute the Windows EXE through
 Do not commit generated EXEs or build folders to Git.
 
 1. Push the source commit to `main`.
-2. [Create a release](https://github.com/Ammaranjum/openrouter-usage-checker/releases/new) with tag `v1.4.1` for the current version.
+2. [Create a release](https://github.com/Ammaranjum/openrouter-usage-checker/releases/new) with tag `v1.4.2` for the current version.
 3. Upload `windows/dist/win-x64/OpenRouterUsage.exe` as an asset named **OpenRouterUsage.exe**.
 4. Mark the release **Latest** and publish it.
 
@@ -181,3 +194,14 @@ The download button above becomes available after the EXE is uploaded and the
 release is published. Every future release marked Latest must include an asset
 named `OpenRouterUsage.exe` to keep that button working. Visitors should download
 the EXE asset; GitHub's **Source code** ZIP is for developers.
+
+
+The [Windows workflow](.github/workflows/windows.yml) checks core behavior and
+Windows controls, builds the portable app, and saves the EXE and ZIP as workflow
+artifacts. The [Mac workflow](.github/workflows/macos.yml) tests and builds the
+universal development ZIP. Check both workflows before publishing a release.
+Mac artifacts are not notarized public releases.
+
+GitHub Pages uses `main` → `/docs`. In repository **Settings → Pages**, choose
+**Deploy from a branch**, select `main` and `/docs`, and save. The site contains
+setup instructions and links to Releases; generated binaries stay out of Git.

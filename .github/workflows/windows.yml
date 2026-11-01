@@ -1,0 +1,30 @@
+name: Windows companion
+on:
+  workflow_dispatch:
+  push:
+    paths: ['windows/**', '.github/workflows/windows.yml']
+  pull_request:
+    paths: ['windows/**', '.github/workflows/windows.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Check usage and history
+        run: dotnet run --project windows/tests/CoreChecks.csproj
+      - name: Check Windows controls
+        run: dotnet run --project windows/tests/ui/UiChecks.csproj
+      - name: Build portable Windows app
+        run: ./windows/build.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OpenRouterUsage-win-x64
+          path: |
+            windows/dist/win-x64/OpenRouterUsage.exe
+            windows/dist/OpenRouterUsage-win-x64.zip
+          if-no-files-found: error

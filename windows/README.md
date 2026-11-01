@@ -10,15 +10,14 @@ repository root and has its own installer and storage.
 3. Enter your OpenRouter key and save. Look for **OR** near the Windows clock;
    Windows may put it in the hidden-icons overflow menu.
 4. Left-click the OR tray icon to open remaining credit, current usage, recent
-   days, refresh, and settings. The large remaining amount appears below the title
-   and **Made by Ammar**. The balance and “remaining” share one line. Today/week/month
+   days, refresh, and settings. The large remaining amount appears below the title. The balance and “remaining” share one line. Today/week/month
    amounts align on the right. Refresh uses the small icon beside the title, with
    a tooltip and keyboard-accessible button. Details and the separate Refresh row
    are removed. A single blue progress bar shows cap usage only when a positive
    cap and remaining amount are reported. “Monthly limit” appears only when the
    API reports a monthly reset. Popup width is approximately 288 logical pixels;
    the entire popup uses one custom native control, including matching Lucide line
-   icons, a blue OR logo, cursive credit, spacing, typography, dividers, and hover
+   icons, a blue OR logo, spacing, typography, dividers, and hover
    treatment. Recent days opens a matching flyout to the left when space allows,
    with seven short dates and amounts. It stays within the screen work area.
    Refresh retains the last successful values while checking the same key, and
@@ -42,10 +41,9 @@ with 30, 60, 90, 120 seconds, and 5, 10, 30, 60 minutes; new installations defau
 to 120 seconds. An existing custom interval is preserved as an extra choice.
 Only the title bar names the app. The history explanation is omitted.
 “Refresh every,” its dropdown, and Delete saved key share one row.
-The single-line footer places cursive **Made by Ammar** at the far left and
-**Buy me a Coffee ☕** at the far right. Both use a readable medium grey and align
-with the key row outer edges.
-The coffee text is not a link.
+The Settings footer places cursive **Made by Ammar** at the far left, aligned
+with the key field. Its font is 30% smaller (6.3 pt). The usage popup has no
+authorship label, and the coffee label is removed.
 To stop it, left-click the OR tray icon and choose **Exit**. Your key and history
 stay saved. On update, exit the running copy before replacing the EXE.
 If launched again, it shows a message instead of starting a second collector.

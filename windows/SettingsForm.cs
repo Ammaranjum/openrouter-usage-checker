@@ -115,15 +115,11 @@ internal sealed class SettingsForm : Form
         buttons.Controls.Add(save);
         buttons.Controls.Add(cancel);
         layout.Controls.Add(buttons);
-        var footer = new TableLayoutPanel { AutoSize = true, Dock = DockStyle.Top, MinimumSize = new Size(0, 24), ColumnCount = 2, RowCount = 1, Margin = new Padding(0, 16, 0, 0) };
-        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        var footer = new TableLayoutPanel { AutoSize = true, Dock = DockStyle.Top, MinimumSize = new Size(0, 24), ColumnCount = 1, RowCount = 1, Margin = new Padding(0, 16, 0, 0) };
+        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         var credit = new PopupLabel { Text = "Made by Ammar", Dock = DockStyle.Fill, Tag = "credit", Margin = Padding.Empty };
-        credit.Font = new Font("Segoe Script", 9);
+        credit.Font = new Font("Segoe Script", 6.3f);
         footer.Controls.Add(credit);
-        var coffee = new PopupLabel { Text = "Buy me a Coffee ☕", Dock = DockStyle.Fill, Tag = "credit", Margin = Padding.Empty };
-        coffee.TextAlign = ContentAlignment.MiddleRight;
-        footer.Controls.Add(coffee);
         layout.Controls.Add(footer);
         AcceptButton = save;
         CancelButton = cancel;

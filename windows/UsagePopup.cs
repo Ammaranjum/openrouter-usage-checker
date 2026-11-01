@@ -9,10 +9,10 @@ internal sealed class UsagePopup : UserControl
 {
     readonly float scale;
     readonly Panel summary = new(), actions = new(), progress = new();
-    readonly Label credit, amount, remaining, cap, daily, weekly, monthly, updated, message;
+    readonly Label amount, remaining, cap, daily, weekly, monthly, updated, message;
     readonly Button refresh;
     readonly Font bodyFont = new("Segoe UI", 9.75f), titleFont = new("Segoe UI Semibold", 9.75f),
-        signatureFont = new("Segoe Script", 10.5f), balanceFont = new("Segoe UI Semibold", 21),
+        balanceFont = new("Segoe UI Semibold", 21),
         captionFont = new("Segoe UI", 9), updatedFont = new("Segoe UI", 8.625f);
     readonly Dictionary<string, Bitmap> icons = new();
     readonly Bitmap logo;
@@ -25,7 +25,7 @@ internal sealed class UsagePopup : UserControl
         scale = dpiScale;
         AutoScaleMode = AutoScaleMode.None;
         Font = bodyFont;
-        Size = new Size(S(286), S(346));
+        Size = new Size(S(286), S(320));
         DoubleBuffered = true;
         foreach (string name in new[] { "refresh-cw", "calendar-days", "settings", "power", "chevron-left" })
         {
@@ -36,8 +36,8 @@ internal sealed class UsagePopup : UserControl
         logo = appIcon.ToBitmap();
         Controls.Add(summary);
         Controls.Add(actions);
-        summary.SetBounds(0, 0, S(286), S(243));
-        actions.SetBounds(0, S(243), S(286), S(103));
+        summary.SetBounds(0, 0, S(286), S(217));
+        actions.SetBounds(0, S(217), S(286), S(103));
         actions.Paint += (_, e) => { using var pen = new Pen(AppTheme.Border); e.Graphics.DrawLine(pen, 0, 0, actions.Width, 0); };
         var mark = new PictureBox { Image = logo, SizeMode = PictureBoxSizeMode.Zoom };
         mark.SetBounds(S(12), S(17), S(18), S(18));
@@ -48,11 +48,10 @@ internal sealed class UsagePopup : UserControl
         refresh.Click += (_, _) => onRefresh();
         tips.SetToolTip(refresh, "Refresh now");
         summary.Controls.Add(refresh);
-        credit = Add("Made by Ammar", signatureFont, 12, 40, 262, 20, muted: true);
-        amount = Add("", balanceFont, 12, 66, 262, 34);
-        remaining = Add("remaining", bodyFont, 12, 80, 75, 18, muted: true);
-        cap = Add("", captionFont, 12, 105, 262, 16, muted: true);
-        progress.SetBounds(S(12), S(128), S(262), S(5));
+        amount = Add("", balanceFont, 12, 40, 262, 34);
+        remaining = Add("remaining", bodyFont, 12, 54, 75, 18, muted: true);
+        cap = Add("", captionFont, 12, 79, 262, 16, muted: true);
+        progress.SetBounds(S(12), S(102), S(262), S(5));
         progress.AccessibleName = "Key spending cap used";
         progress.Paint += (_, e) =>
         {
@@ -63,11 +62,11 @@ internal sealed class UsagePopup : UserControl
         };
         summary.Controls.Add(progress);
         stats.Add(progress);
-        daily = Stat("Today", 142);
-        weekly = Stat("This week", 166);
-        monthly = Stat("This month", 190);
-        updated = Add("", updatedFont, 12, 217, 262, 16, muted: true);
-        message = Add("", captionFont, 12, 66, 262, 48);
+        daily = Stat("Today", 116);
+        weekly = Stat("This week", 140);
+        monthly = Stat("This month", 164);
+        updated = Add("", updatedFont, 12, 191, 262, 16, muted: true);
+        message = Add("", captionFont, 12, 40, 262, 48);
         message.Visible = false;
         foreach (var (text, icon, handler, y) in new[]
         {
@@ -114,7 +113,7 @@ internal sealed class UsagePopup : UserControl
         amount.Visible = remaining.Visible = updated.Visible = data is not null;
         bool hasCap = data?.Limit is > 0 && data.LimitRemaining.HasValue;
         cap.Visible = progress.Visible = hasCap;
-        int bottom = S(66);
+        int bottom = S(40);
         if (data is not null)
         {
             amount.Text = data.LimitRemaining.HasValue ? UsageFiles.Money(data.LimitRemaining) : "Not reported";
@@ -122,9 +121,9 @@ internal sealed class UsagePopup : UserControl
             int amountWidth = TextRenderer.MeasureText(amount.Text, balanceFont, Size.Empty, TextFormatFlags.NoPadding).Width;
             int remainingWidth = TextRenderer.MeasureText("remaining", bodyFont, Size.Empty, TextFormatFlags.NoPadding).Width;
             bool sameLine = amountWidth + S(7) + remainingWidth <= S(262);
-            amount.SetBounds(S(12), S(66), Math.Min(amountWidth + S(2), S(262)), S(34));
-            remaining.SetBounds(sameLine ? S(12) + amountWidth + S(7) : S(12), S(sameLine ? 80 : 100), remainingWidth + S(2), S(18));
-            bottom = S(sameLine ? 105 : 123);
+            amount.SetBounds(S(12), S(40), Math.Min(amountWidth + S(2), S(262)), S(34));
+            remaining.SetBounds(sameLine ? S(12) + amountWidth + S(7) : S(12), S(sameLine ? 54 : 74), remainingWidth + S(2), S(18));
+            bottom = S(sameLine ? 79 : 97);
             if (hasCap)
             {
                 decimal used = Math.Clamp(data.Limit!.Value - data.LimitRemaining!.Value, 0, data.Limit.Value);
@@ -208,7 +207,7 @@ internal sealed class UsagePopup : UserControl
         base.Dispose(disposing);
         if (!disposing) return;
         foreach (var image in icons.Values) image.Dispose();
-        foreach (var font in new[] { bodyFont, titleFont, signatureFont, balanceFont, captionFont, updatedFont }) font.Dispose();
+        foreach (var font in new[] { bodyFont, titleFont, balanceFont, captionFont, updatedFont }) font.Dispose();
         logo.Dispose();
         tips.Dispose();
     }
