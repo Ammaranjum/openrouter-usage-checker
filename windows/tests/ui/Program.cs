@@ -28,7 +28,8 @@ internal static class Program
         int footerTop = credit.PointToScreen(Point.Empty).Y;
         Check(footerTop - buttonBottom >= (int)Math.Round(12 * settings.DeviceDpi / 96f), "Footer has at least 12 logical pixels below buttons");
         var key = All(settings).OfType<TextBox>().Single();
-        Check(credit.PointToScreen(Point.Empty).X == key.PointToScreen(Point.Empty).X,
+        // TextBox.PointToScreen starts inside its native border; compare outer bounds.
+        Check(credit.Parent!.PointToScreen(credit.Location).X == key.Parent!.PointToScreen(key.Location).X,
             "Signature aligns with the key row left edge");
         using var savedInterval = new SettingsForm(new AppSettings(RefreshSeconds: 600));
         Check(All(savedInterval).OfType<ComboBox>().Single().Text == "10 minutes", "A saved interval stays selected");
