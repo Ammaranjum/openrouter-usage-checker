@@ -4,6 +4,26 @@ A native SwiftUI menu bar companion for **macOS 13 Ventura or later**, with a
 universal build for Apple Silicon and Intel. No Electron, web view, third-party
 packages, analytics, or management key required.
 
+## Download and install
+
+[Download OpenRouterUsage-macOS-universal.zip](https://github.com/Ammaranjum/openrouter-usage-checker/releases/latest/download/OpenRouterUsage-macOS-universal.zip)
+
+1. Double-click the ZIP to extract it.
+2. Drag **OpenRouter Usage.app** into **Applications**, then open it.
+3. This preview is ad-hoc signed and **not notarized by Apple**. If macOS
+   blocks it as an unidentified developer, follow
+   [Apple's guidance](https://support.apple.com/en-us/102445). If you trust this
+   download, use **System Settings → Privacy & Security → Open Anyway** and
+   confirm the app name. An organization-managed Mac may disallow exceptions.
+4. Click the chart icon in the menu bar, enter your OpenRouter key, and choose
+   **Save and refresh**. The app has no Dock icon.
+
+No Xcode, terminal commands, or compilation is needed for this download.
+For updates, quit the app before replacing it in Applications. Mac CI verifies
+unit tests, compilation, the ad-hoc signature, and both CPU architectures;
+interactive use, Keychain, login launch, and live API behavior still need
+verification on real Macs. A notarized release needs an Apple Developer ID.
+
 ## Build and install on a Mac
 
 Install Xcode command line tools (`xcode-select --install`) or Xcode 15 or newer.
@@ -20,10 +40,9 @@ Usage.app** into **Applications** before enabling **Open at login**. Click the
 chart icon in the menu bar, paste your key, and choose **Save and refresh**.
 This is a menu bar app; it has no Dock icon. Quit from its panel.
 
-Local builds are ad-hoc signed for development. There is no published, notarized
-Mac download yet. The macOS GitHub Actions workflow also produces a development
-ZIP after a successful run; that artifact is not a public production release.
-Do not disable Gatekeeper to distribute an unsigned app.
+Local builds are ad-hoc signed for development. The release download is the same
+universal preview ZIP produced by the successful macOS GitHub Actions build.
+It is not notarized. Do not disable Gatekeeper globally.
 
 ## Interface
 

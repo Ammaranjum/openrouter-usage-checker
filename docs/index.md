@@ -20,19 +20,19 @@ For updates, exit the app before replacing the EXE. Saved settings and history s
 The native Mac app includes a menu bar panel, Keychain storage, local history,
 and optional launch at login. It supports Apple Silicon and Intel.
 
-The Mac version is currently a **development build**. A signed, notarized public
-download is not available yet. Build on a Mac with Xcode command line tools:
+**[Download Mac ZIP — Apple Silicon and Intel](https://github.com/Ammaranjum/openrouter-usage-checker/releases/latest/download/OpenRouterUsage-macOS-universal.zip)**
 
-```sh
-git clone https://github.com/Ammaranjum/openrouter-usage-checker
-cd openrouter-usage-checker
-./macos/build.sh
-```
+No Xcode or compilation is needed. Double-click the ZIP, drag **OpenRouter
+Usage.app** to **Applications**, and open it. Click the chart icon in the menu
+bar to enter your key. There is no Dock icon.
 
-Move `macos/dist/OpenRouter Usage.app` to Applications and open it.
+This preview is ad-hoc signed and **not notarized by Apple**. If macOS blocks
+it as an unidentified developer, see [Apple's guidance](https://support.apple.com/en-us/102445).
+If you trust this download, choose **System Settings → Privacy & Security →
+Open Anyway** and confirm the app name. Managed Macs may prevent this exception.
+Mac CI tests and builds pass; interactive use on real Macs remains unverified.
 
-[Mac build and signing guide](https://github.com/Ammaranjum/openrouter-usage-checker/blob/main/macos/README.md)
-· [Mac development builds](https://github.com/Ammaranjum/openrouter-usage-checker/actions/workflows/macos.yml)
+[Mac setup guide](https://github.com/Ammaranjum/openrouter-usage-checker/blob/main/macos/README.md)
 
 ## Ubuntu / GNOME Linux
 

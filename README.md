@@ -12,6 +12,11 @@ with daily history saved locally. Made by Ammar.
 Download → double-click → enter your OpenRouter key. No installer or Git required.
 See [Windows setup](#windows-setup) for details.
 
+**[Download for Mac — Apple Silicon and Intel](https://github.com/Ammaranjum/openrouter-usage-checker/releases/latest/download/OpenRouterUsage-macOS-universal.zip)**
+
+Requires macOS 13+. This preview is not notarized; see [Mac setup](#macos-setup)
+for first-launch instructions. No Xcode or compilation is needed.
+
 **[Install on Ubuntu / GNOME Linux](#ubuntu--gnome-linux-setup)**
 
 Use the setup commands below, then log out and back in.
@@ -25,10 +30,18 @@ The native [Mac companion](macos/README.md) supports **macOS 13 or later** on
 Apple Silicon and Intel. It provides a SwiftUI menu bar panel, Keychain credential
 storage, local daily history, and optional launch at login.
 
-Build on a Mac with Xcode command line tools: `./macos/build.sh`, then move
-`macos/dist/OpenRouter Usage.app` to Applications and open it. Click the chart
-icon to add your OpenRouter key. A signed, notarized Mac download has not been
-published yet; see the Mac guide for build and distribution instructions.
+1. [Download the Mac ZIP](https://github.com/Ammaranjum/openrouter-usage-checker/releases/latest/download/OpenRouterUsage-macOS-universal.zip) and double-click it to extract.
+2. Drag **OpenRouter Usage.app** to **Applications**, then open it.
+3. If macOS blocks it because the developer cannot be verified, review
+   [Apple's instructions](https://support.apple.com/en-us/102445). If you trust
+   this download, use **System Settings → Privacy & Security → Open Anyway**
+   and confirm the app name. Managed Macs may prevent this exception.
+4. Click the chart icon in the menu bar, enter your own OpenRouter key, and
+   choose **Save and refresh**. There is no Dock icon.
+
+This is an ad-hoc-signed preview, not an Apple-notarized release. The universal
+package passes Mac CI tests and build checks; interactive use on real Macs has
+not been verified. See the [Mac guide](macos/README.md) for details.
 
 ## Windows setup
 
