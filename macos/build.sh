@@ -25,7 +25,7 @@ signing_options=(--force --options runtime --entitlements OpenRouterUsage.entitl
 if [[ "$identity" != '-' ]]; then signing_options+=(--timestamp); fi
 codesign "${signing_options[@]}" "$app"
 codesign --verify --strict --verbose=2 "$app"
-lipo -verify_arch arm64 x86_64 "$app/Contents/MacOS/OpenRouterUsage"
+lipo "$app/Contents/MacOS/OpenRouterUsage" -verify_arch arm64 x86_64
 archive="$PWD/dist/OpenRouterUsage-macOS-universal.zip"
 # ditto can update existing archives; remove the old artifact to avoid stale entries.
 rm -f "$archive"
