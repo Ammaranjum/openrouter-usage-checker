@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.4
+
+- Restore native Command-V paste and standard editing shortcuts in the Mac API-key field.
+- Check keyboard paste in both the settings window and menu-bar panel in packaged Mac builds.
+- Publish Windows, universal Mac, and GNOME Linux downloads together after all platform checks pass.
+
+Mac app version is 1.0.2. Windows and Linux behavior is unchanged.
+
 ## 1.4.3
 
 - Fix the Mac 1.0.0 launch path that could leave the app running with no usable UI.

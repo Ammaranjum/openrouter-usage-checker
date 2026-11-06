@@ -24,6 +24,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var titleTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // AppKit routes editing shortcuts through the menu to the focused field.
+        let mainMenu = NSMenu()
+        let appMenu = NSMenu()
+        appMenu.addItem(withTitle: "Quit OpenRouter Usage", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        mainMenu.addItem(withTitle: "OpenRouter Usage", action: nil, keyEquivalent: "").submenu = appMenu
+        let editMenu = NSMenu(title: "Edit")
+        editMenu.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        editMenu.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        editMenu.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        mainMenu.addItem(withTitle: "Edit", action: nil, keyEquivalent: "").submenu = editMenu
+        NSApp.mainMenu = mainMenu
+
         // Create and retain an ordinary AppKit status item before loading credentials.
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem = item

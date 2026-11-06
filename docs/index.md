@@ -34,7 +34,7 @@ Mac CI tests and builds pass; interactive use on real Macs remains unverified.
 
 [Mac setup guide](https://github.com/Ammaranjum/openrouter-usage-checker/blob/main/macos/README.md)
 
-Mac app **1.0.1** opens a usage/settings window on launch and adds **OR** to
+Mac app **1.0.2** supports **⌘V paste** in the API-key field, opens a usage/settings window on launch, and adds **OR** to
 the menu bar. Closing the window keeps the app running. Open it again from
 Applications to restore the window if the menu bar button is unavailable.
 
@@ -42,10 +42,10 @@ Applications to restore the window if the menu bar button is unavailable.
 
 Requires GNOME Shell 45–48.
 
+**[Download Linux / GNOME ZIP](https://github.com/Ammaranjum/openrouter-usage-checker/releases/latest/download/OpenRouterUsage-GNOME.zip)**
+
 ```sh
-git clone https://github.com/Ammaranjum/openrouter-usage-checker
-cd openrouter-usage-checker
-./install.sh
+gnome-extensions install --force ~/Downloads/OpenRouterUsage-GNOME.zip
 ```
 
 Log out and back in, then run:

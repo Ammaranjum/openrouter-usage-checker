@@ -1,0 +1,96 @@
+name: Release downloads
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mac:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test and build universal Mac app
+        run: ./macos/build.sh
+      - name: Check packaged app, keyboard paste, and Keychain
+        run: python3 macos/check-startup.py
+      - uses: actions/upload-artifact@v4
+        if: matrix.runner == 'macos-15'
+        with:
+          name: release-mac
+          path: macos/dist/OpenRouterUsage-macOS-universal.zip
+          if-no-files-found: error
+
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Check usage, history, and Windows controls
+        run: |
+          dotnet run --project windows/tests/CoreChecks.csproj
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet run --project windows/tests/ui/UiChecks.csproj
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build portable Windows app
+        run: ./windows/build.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: windows/dist/win-x64/OpenRouterUsage.exe
+          if-no-files-found: error
+
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install test tools
+        run: sudo apt-get update && sudo apt-get install -y gjs zip
+      - name: Check Linux usage and history
+        run: |
+          gjs -m tests/logic-check.mjs
+          gjs -m tests/history-check.mjs
+      - name: Package GNOME extension
+        run: zip OpenRouterUsage-GNOME.zip extension.js prefs.js metadata.json install.sh uninstall.sh LICENSE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-linux
+          path: OpenRouterUsage-GNOME.zip
+          if-no-files-found: error
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [mac, windows, linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: downloads
+      - name: Publish one complete release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          test -s downloads/OpenRouterUsage.exe
+          test -s downloads/OpenRouterUsage-macOS-universal.zip
+          test -s downloads/OpenRouterUsage-GNOME.zip
+          gh release create "$RELEASE_TAG" downloads/* --verify-tag --draft \
+            --title "OpenRouter Usage $RELEASE_TAG" --notes-file RELEASE.md
+          gh release edit "$RELEASE_TAG" --draft=false --latest

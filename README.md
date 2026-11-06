@@ -17,9 +17,9 @@ See [Windows setup](#windows-setup) for details.
 Requires macOS 13+. This preview is not notarized; see [Mac setup](#macos-setup)
 for first-launch instructions. No Xcode or compilation is needed.
 
-**[Install on Ubuntu / GNOME Linux](#ubuntu--gnome-linux-setup)**
+**[Download for Ubuntu / GNOME Linux — ZIP](https://github.com/Ammaranjum/openrouter-usage-checker/releases/latest/download/OpenRouterUsage-GNOME.zip)**
 
-Use the setup commands below, then log out and back in.
+Use the setup commands below to install the downloaded ZIP, then log out and back in.
 
 Ubuntu is a Linux distribution. The Linux version requires GNOME Shell 45–48;
 it is not an extension for every Linux desktop.
@@ -43,7 +43,7 @@ This is an ad-hoc-signed preview, not an Apple-notarized release. The universal
 package passes Mac CI tests and build checks; interactive use on real Macs has
 not been verified. See the [Mac guide](macos/README.md) for details.
 
-Mac app **1.0.1** opens a usage/settings window on launch and adds **OR** to
+Mac app **1.0.2** supports **⌘V paste** in the API-key field, opens a usage/settings window on launch, and adds **OR** to
 the menu bar. Closing the window keeps the app running. Open it again from
 Applications to restore the window if the menu bar button is unavailable.
 
@@ -64,9 +64,7 @@ and history are kept.
 ## Ubuntu / GNOME Linux setup
 
 ```bash
-git clone https://github.com/Ammaranjum/openrouter-usage-checker
-cd openrouter-usage-checker
-./install.sh
+gnome-extensions install --force ~/Downloads/OpenRouterUsage-GNOME.zip
 ```
 
 Then **log out and back in**. After logging in, run:
@@ -198,26 +196,19 @@ not replace visual testing inside GNOME Shell.
 
 ## Publishing a new release
 
-Keep source code in this repository and distribute the Windows EXE through
-[GitHub Releases](https://github.com/Ammaranjum/openrouter-usage-checker/releases).
-Do not commit generated EXEs or build folders to Git.
+Update `RELEASE.md`, the changelog, and any changed platform's app version.
+Push the source commit to `main` and a version tag (for example, `v1.4.4`).
+The [release workflow](.github/workflows/release.yml) tests and builds Windows,
+Mac (on Apple Silicon and Intel), and Linux before publishing one Latest release.
+It uploads exactly three application downloads: `OpenRouterUsage.exe`,
+`OpenRouterUsage-macOS-universal.zip`, and `OpenRouterUsage-GNOME.zip`.
+Every Latest release must contain all three files so the download links keep working.
 
-1. Push the source commit to `main`.
-2. [Create a release](https://github.com/Ammaranjum/openrouter-usage-checker/releases/new) with tag `v1.4.3` for this Mac startup repair (Windows remains version 1.4.2).
-3. Upload `windows/dist/win-x64/OpenRouterUsage.exe` as an asset named **OpenRouterUsage.exe**.
-4. Mark the release **Latest** and publish it.
-
-The download button above becomes available after the EXE is uploaded and the
-release is published. Every future release marked Latest must include an asset
-named `OpenRouterUsage.exe` to keep that button working. Visitors should download
-the EXE asset; GitHub's **Source code** ZIP is for developers.
-
-
-The [Windows workflow](.github/workflows/windows.yml) checks core behavior and
-Windows controls, builds the portable app, and saves the EXE and ZIP as workflow
-artifacts. The [Mac workflow](.github/workflows/macos.yml) tests and builds the
-universal development ZIP. Check both workflows before publishing a release.
-Mac artifacts are not notarized public releases.
+The workflow creates a draft with all files before making it public. A failed
+platform check prevents publication. A manual run on a branch checks the builds
+without publishing; publication requires a version tag. Generated builds stay
+out of Git. GitHub also adds source archives for developers automatically.
+Mac builds remain ad-hoc signed and not notarized; Windows builds are unsigned.
 
 GitHub Pages uses `main` → `/docs`. In repository **Settings → Pages**, choose
 **Deploy from a branch**, select `main` and `/docs`, and save. The site contains

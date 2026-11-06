@@ -6,8 +6,8 @@ packages, analytics, or management key required.
 
 ## Download and install
 
-Mac app version **1.0.1** fixes the invisible-interface launch failure reported
-in 1.0.0. Launch opens a usage/settings window and creates an **OR** menu bar
+Mac app version **1.0.2** restores **⌘V paste** in the API-key field in both
+the settings window and menu-bar panel. Launch opens a usage/settings window and creates an **OR** menu bar
 button. Closing the window leaves the collector running. Open the app again
 from Applications to restore the window if the menu bar button is unavailable.
 
@@ -137,7 +137,7 @@ per-key separation, private file permissions, and corrupt-file preservation.
 The build script also compiles the UI, verifies its signature, and verifies both
 binary architectures. CI then runs `python3 macos/check-startup.py` against the
 packaged app: it verifies the native status item, an actual visible setup window,
-menu bar click handling, window close/reopen, and a blocked/failed Keychain read.
+menu bar click handling, Command-V paste into both API-key fields, window close/reopen, and a blocked/failed Keychain read.
 It also checks empty/invalid saved keys and unknown remaining cap. The launch
 check extracts the release ZIP, verifies its signature, and launches it directly
 and through LaunchServices, on both Apple Silicon and Intel Mac runners. It
@@ -145,7 +145,8 @@ makes no API requests and never reads the normal saved-key service. A separate
 round trip saves, reads, replaces, and deletes a synthetic key in a unique
 Keychain service. CI saves a screenshot of the setup window for each launch
 path. These checks do not replace acceptance on the affected MacBook.
-CI does not publish releases.
+The separate release workflow publishes all three platform downloads together
+only after the Mac, Windows, and Linux checks pass.
 
 Finally, an external WindowServer probe verifies a visible window from the
 ordinary app executable with no startup-check flag. It checks the shipped
